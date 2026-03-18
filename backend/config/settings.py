@@ -31,18 +31,34 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     
-    # new added
+    # Third-party
     'rest_framework',
-    'corsheaders',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+
+     # Local apps
     'bookmarks',
+    'accounts',
+    'corsheaders',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     # new added
@@ -53,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware', # 這個middleware是為了讓allauth的user model可以被使用
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -129,3 +146,54 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# new added - for JWT authentication
+# 每一個 API request 進來時：
+# Django 會看 header 有沒有 JWT
+# 如果有 → decode → 找 user
+# request.user 就會是那個人
+# 沒有 → 直接 401 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# new added - for JWT authentication
+REST_AUTH = {
+    'USE_JWT': True,
+}
+
+# new added - for JWT authentication
+# 設定 JWT 的過期時間
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1), # 1小時
+    'AUTH_HEADER_TYPES': ('Bearer',), # 通常是 Bearer
+}
+
+# Google provider 文件有說需要在 Google OAuth app 端設定 client，並搭配對應 provider config。
+# scope 取 profile、email 是最常見的基本配置。
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+    }
+}
+# 注意：有可能會一直連環爆
+# 因為 Django 每次跑 manage.py 都會先完整載入 settings.py。
+# 所以只要 settings.py 裡有一個新套件設定不完整，它連 startapp 這種基本指令都會先卡住。
+# 所以我們現在策略是：
+# 先把 allauth 最低限度設定補齊
+# 讓 Django 可以正常啟動
+# 再建立 accounts app
+# 建好之後再把 'accounts' 加回 INSTALLED_APPS
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]

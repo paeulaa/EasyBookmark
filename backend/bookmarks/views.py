@@ -27,4 +27,18 @@ class BookmarkListView(generics.ListCreateAPIView):
         return Bookmark.objects.filter(user=self.request.user) # 只有登入的人才能看到自己的bookmark
     def perform_create(self, serializer):
         serializer.save(user=self.request.user) # 建立bookmark時，自動填入user
+
+class FolderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FolderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Folder.objects.filter(user=self.request.user)
+
+class BookmarkDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = BookmarkSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Bookmark.objects.filter(user=self.request.user)
 # Create your views here.
