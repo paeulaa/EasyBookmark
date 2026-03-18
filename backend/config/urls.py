@@ -20,8 +20,12 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-  path('admin/', admin.site.urls),
+    # admin routes
+    path('admin/', admin.site.urls),
 
+    # allauth routes
+    path('accounts/', include('allauth.urls')),
+    
     # app routes
     path('api/', include('bookmarks.urls')),
     path('api/', include('accounts.urls')),

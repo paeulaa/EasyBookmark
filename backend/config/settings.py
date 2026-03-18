@@ -85,6 +85,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # 'DIRS': [BASE_DIR / "templates"],  # 👈 確保有這行,做一個暫時的google OAuth login page
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
