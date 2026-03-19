@@ -5,7 +5,7 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from rest_framework.permissions import IsAuthenticated
-# from django.shortcuts import render, redirect
+
 
 class GoogleLoginView(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
@@ -30,5 +30,3 @@ class MeView(APIView):
         })
 
 
-# def login_page(request):
-#     return render(request, "login.html")

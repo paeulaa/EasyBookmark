@@ -3,7 +3,7 @@ from rest_framework import generics
 from .models import Folder, Bookmark
 from rest_framework.permissions import IsAuthenticated
 from .serializers import FolderSerializer, BookmarkSerializer
-
+from .permissions import IsOwnerOrReadOnly
 # ListAPIView意思是：
 # 幫你做一個「讀取多筆資料列表」的 API
 # 所以：
@@ -30,14 +30,14 @@ class BookmarkListView(generics.ListCreateAPIView):
 
 class FolderDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FolderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]# folder也加，防止被掛user的人修改
 
     def get_queryset(self):
         return Folder.objects.filter(user=self.request.user)
 
 class BookmarkDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BookmarkSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]# 加 permission 只有登入的人才能使用
 
     def get_queryset(self):
         return Bookmark.objects.filter(user=self.request.user)
