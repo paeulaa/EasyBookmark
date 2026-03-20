@@ -1,0 +1,21 @@
+{% extends "allauth/layouts/entrance.html" %}
+
+{% block content %}
+<h1>Save, Organize,<br />Come Back Later.</h1>
+
+<p class="subtitle">
+  Sign in with Google to start using your bookmark collection.
+</p>
+
+<form method="post" action="/accounts/google/login/?process=login">
+  {% csrf_token %}
+  <button type="submit" class="google-btn">
+    <span class="google-icon">G</span>
+    <span>Continue with Google</span>
+  </button>
+</form>
+
+{% comment %} <p class="caption">
+  By signing in, you agree to our <a href="/terms">terms of service</a> and <a href="/privacy">privacy policy</a>.
+</p> {% endcomment %}
+{% endblock %}

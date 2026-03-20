@@ -85,8 +85,8 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 'DIRS': [BASE_DIR / "templates"],  # 👈 確保有這行,做一個暫時的google OAuth login page
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],  # 👈 確保有這行,做一個暫時的google OAuth login page
+        # 'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -201,4 +201,5 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-LOGIN_REDIRECT_URL = "http://localhost:3000/"
+FRONTEND_URL = "http://localhost:3000"
+LOGIN_REDIRECT_URL = "/api/auth/google/success/"
