@@ -1,103 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { loginRequest } from "@/lib/api";
-import { clearTokens, getAccessToken } from "@/lib/auth";
-import type { User } from "@/types";
-import FolderChips from "@/components/FolderChips";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import DashboardHeader from "@/components/DashboardHeader";
+import DashboardFooter from "@/components/DashboardFooter";
+import FolderOverlay from "@/components/FolderOverlay";
 import BookmarkCarousel from "@/components/BookmarkCarousel";
 
-const mockFolders = ["All", "Design", "Research", "Tools", "Reading"];
-
+const mockFolders = ["All", "Design", "Research", "Tools"];
 const mockBookmarks = [
-    { id: 1, title: "Notion Design System", domain: "notion.so" },
-    { id: 2, title: "Mobbin Inspiration", domain: "mobbin.com" },
-    { id: 3, title: "Awwwards Collection", domain: "awwwards.com" },
-    { id: 4, title: "Vercel Docs", domain: "vercel.com" },
-    { id: 5, title: "Figma Community", domain: "figma.com" },
+    { id: 1, title: "Notion Design", domain: "notion.so" },
+    { id: 2, title: "Mobbin", domain: "mobbin.com" },
+    { id: 3, title: "Figma", domain: "figma.com" },
+    { id: 4, title: "Awwwards", domain: "awwwards.com" },
 ];
 
 export default function DashboardPage() {
-    const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [selectedFolder, setSelectedFolder] = useState("All");
+    const headerShellRef = useRef<HTMLDivElement>(null);
+    const [folderOverlayTopPx, setFolderOverlayTopPx] = useState(72);
 
-    function handleLogout() {
-        clearTokens();
-        router.replace("/");
+    const [selectedFolder, setSelectedFolder] = useState("All");
+    const [searchValue, setSearchValue] = useState("");
+    const [isFolderOverlayOpen, setIsFolderOverlayOpen] = useState(false);
+
+    useLayoutEffect(() => {
+        const el = headerShellRef.current;
+        if (!el) return;
+
+        const sync = () => {
+            setFolderOverlayTopPx(el.getBoundingClientRect().height);
+        };
+
+        sync();
+        const ro = new ResizeObserver(sync);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    const filteredBookmarks = useMemo(() => {
+        return mockBookmarks.filter((bookmark) =>
+            bookmark.title.toLowerCase().includes(searchValue.toLowerCase())
+        );
+    }, [searchValue]);
+
+    function handleOpenProfile() {
+        console.log("open profile");
     }
 
-    useEffect(() => {
-        async function loadUser() {
-            const token = getAccessToken();
+    function handleAddBookmark() {
+        console.log("open add bookmark");
+    }
 
-            if (!token) {
-                router.replace("/");
-                return;
-            }
+    function handleCreateFolder() {
+        console.log("create folder");
+    }
 
-            try {
-                const data = await loginRequest(token);
-                setUser(data);
-            } catch {
-                clearTokens();
-                router.replace("/");
-            } finally {
-                setLoading(false);
-            }
-        }
+    function handleFetchChrome() {
+        console.log("fetch from chrome");
+    }
 
-        loadUser();
-    }, [router]);
-
-    if (loading) {
-        return (
-            <main className="min-h-screen flex items-center justify-center bg-neutral-50">
-                <p className="text-sm text-neutral-500">Loading dashboard...</p>
-            </main>
-        );
+    function handleOpenGallery() {
+        console.log("open gallery");
     }
 
     return (
-        <main className="min-h-screen bg-neutral-50 text-neutral-900">
-            <div className="mx-auto max-w-7xl px-6 py-8">
-                <header className="flex items-center justify-between border-b border-neutral-200 pb-5">
-                    <div>
-                        <p className="text-sm text-neutral-500">Bookmark App</p>
-                        <h1 className="mt-1 text-2xl font-semibold">Your Collection</h1>
-                    </div>
+        <main className="flex min-h-dvh w-full flex-1 flex-col bg-neutral-50 text-neutral-900">
+            {/* Header + folder sheet share one positioning context so the overlay sits under the navbar */}
+            <div
+                ref={headerShellRef}
+                className="relative z-50 shrink-0 bg-white"
+            >
+                <DashboardHeader
+                    currentFolder={selectedFolder}
+                    onToggleFolders={() =>
+                        setIsFolderOverlayOpen((open) => !open)
+                    }
+                    onOpenProfile={handleOpenProfile}
+                    onAddBookmark={handleAddBookmark}
+                />
 
-                    <div className="flex items-center gap-4">
-                        <div className="text-right">
-                            <p className="text-sm font-medium text-neutral-900">
-                                {user?.username}
-                            </p>
-                            <p className="text-sm text-neutral-500">{user?.email}</p>
-                        </div>
-
-                        <button
-                            onClick={handleLogout}
-                            className="rounded-full border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-100"
-                        >
-                            Sign out
-                        </button>
-                    </div>
-                </header>
-
-                <section className="mt-8">
-                    <FolderChips
-                        folders={mockFolders}
-                        selectedFolder={selectedFolder}
-                        onSelect={setSelectedFolder}
-                    />
-                </section>
-
-                <section className="mt-10">
-                    <BookmarkCarousel bookmarks={mockBookmarks} />
-                </section>
+                <FolderOverlay
+                    isOpen={isFolderOverlayOpen}
+                    topPx={folderOverlayTopPx}
+                    folders={mockFolders}
+                    selectedFolder={selectedFolder}
+                    onClose={() => setIsFolderOverlayOpen(false)}
+                    onSelectFolder={setSelectedFolder}
+                    onCreateFolder={handleCreateFolder}
+                />
             </div>
+
+            <section className="flex min-h-0 flex-1 flex-col px-6 py-6">
+                <BookmarkCarousel bookmarks={filteredBookmarks} />
+            </section>
+
+            <DashboardFooter
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                onFetchChrome={handleFetchChrome}
+                onOpenGallery={handleOpenGallery}
+            />
         </main>
     );
 }
