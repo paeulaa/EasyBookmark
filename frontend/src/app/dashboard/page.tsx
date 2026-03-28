@@ -1,18 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
 import FolderOverlay from "@/components/FolderOverlay";
 import BookmarkCarousel from "@/components/BookmarkCarousel";
+import { getFolders, getBookmarks } from "@/lib/api";
+import { User, Bookmark, Folder } from "@/types";
 
-const mockFolders = ["All", "Design", "Research", "Tools"];
-const mockBookmarks = [
-    { id: 1, title: "Notion Design", domain: "notion.so" },
-    { id: 2, title: "Mobbin", domain: "mobbin.com" },
-    { id: 3, title: "Figma", domain: "figma.com" },
-    { id: 4, title: "Awwwards", domain: "awwwards.com" },
-];
 
 export default function DashboardPage() {
     const headerShellRef = useRef<HTMLDivElement>(null);
@@ -21,6 +16,9 @@ export default function DashboardPage() {
     const [selectedFolder, setSelectedFolder] = useState("All");
     const [searchValue, setSearchValue] = useState("");
     const [isFolderOverlayOpen, setIsFolderOverlayOpen] = useState(false);
+
+    const [folders, setFolders] = useState<Folder[]>([]);
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
     useLayoutEffect(() => {
         const el = headerShellRef.current;
@@ -36,11 +34,39 @@ export default function DashboardPage() {
         return () => ro.disconnect();
     }, []);
 
+    useEffect(() => {
+        async function fetchBookmarks() {
+            try {
+                const data = await getBookmarks();
+                console.log('API bookmarks:', data); // print出來看看data長怎樣
+                setBookmarks(data as Bookmark[]);
+            } catch (error) {
+                console.error('Failed to fetch bookmarks:', error);
+            }
+        }
+        fetchBookmarks();
+
+        async function fetchFolders() {
+            try {
+                const data = await getFolders();
+                console.log('API folders:', data); // print出來看看data長怎樣
+                setFolders(data as Folder[]);
+            } catch (error) {
+                console.error('Failed to fetch folders:', error);
+            }
+        }
+        fetchFolders();
+    }, []);
+
     const filteredBookmarks = useMemo(() => {
-        return mockBookmarks.filter((bookmark) =>
+        return bookmarks.filter((bookmark) =>
             bookmark.title.toLowerCase().includes(searchValue.toLowerCase())
         );
-    }, [searchValue]);
+    }, [bookmarks, searchValue]);
+
+    const folderNames = useMemo(() => {
+        return ["All", ...folders.map((folder) => folder.name)];
+    }, [folders]);
 
     function handleOpenProfile() {
         console.log("open profile");
@@ -81,7 +107,7 @@ export default function DashboardPage() {
                 <FolderOverlay
                     isOpen={isFolderOverlayOpen}
                     topPx={folderOverlayTopPx}
-                    folders={mockFolders}
+                    folders={folderNames}
                     selectedFolder={selectedFolder}
                     onClose={() => setIsFolderOverlayOpen(false)}
                     onSelectFolder={setSelectedFolder}

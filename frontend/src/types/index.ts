@@ -7,6 +7,7 @@ export type User = {
 };
 
 export type Folder = {
+    id: number;
     user: User;
     name: string; 
     parent?: Folder | null;
@@ -15,6 +16,7 @@ export type Folder = {
 }
 
 export type Bookmark = {
+    id: number;
     user: User;
     title: string;
     url: string;

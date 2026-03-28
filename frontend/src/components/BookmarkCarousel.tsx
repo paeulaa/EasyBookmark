@@ -1,14 +1,18 @@
 import BookmarkCard from "./BookmarkCard";
-
-type Bookmark = {
-    id: number;
-    title: string;
-    domain: string;
-};
+import { Bookmark } from "@/types";
 
 type BookmarkCarouselProps = {
     bookmarks: Bookmark[];
 };
+
+// helper function to get the domain from the url, url prettify
+function getDomain(url: string) {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url;
+    }
+}
 
 export default function BookmarkCarousel({
     bookmarks,
@@ -20,7 +24,7 @@ export default function BookmarkCarousel({
                     <BookmarkCard
                         key={bookmark.id}
                         title={bookmark.title}
-                        domain={bookmark.domain}
+                        url={getDomain(bookmark.url)}
                     />
                 ))}
             </div>
