@@ -11,6 +11,7 @@ type FolderOverlayProps = {
     onClose: () => void;
     onSelectFolder: (folderName: string) => void;
     onCreateFolder: (name: string) => void;
+    onDeleteFolder: (folderId: number) => void;
 };
 
 export default function FolderOverlay({
@@ -21,6 +22,7 @@ export default function FolderOverlay({
     onClose,
     onSelectFolder,
     onCreateFolder,
+    onDeleteFolder,
 }: FolderOverlayProps) {
     // 新增的 folder 名稱
     const [newFolderName, setNewFolderName] = useState("");
@@ -94,27 +96,52 @@ export default function FolderOverlay({
                             <div className="space-y-4 text-center sm:space-y-5">
                                 {[
                                     { id: "all", name: "All" },
-                                    ...folders
+                                    ...folders,
                                 ].map((folder) => {
                                     const isActive = folder.name === selectedFolder;
+                                    const isAll = folder.id === "all";
 
                                     return (
-                                        <button
-                                            type="button"
+                                        <div
                                             key={folder.id}
-                                            role="option"
-                                            aria-selected={isActive}
-                                            onClick={() => {
-                                                onSelectFolder(folder.name);
-                                                onClose();
-                                            }}
-                                            className={`block w-full text-2xl font-semibold transition sm:text-3xl ${isActive
-                                                ? "text-neutral-900"
-                                                : "text-neutral-400 hover:text-neutral-700"
-                                                }`}
+                                            className="group flex items-center justify-center gap-3"
                                         >
-                                            {folder.name}
-                                        </button>
+                                            <button
+                                                type="button"
+                                                role="option"
+                                                aria-selected={isActive}
+                                                onClick={() => {
+                                                    onSelectFolder(folder.name);
+                                                    onClose();
+                                                }}
+                                                className={`block text-2xl font-semibold transition sm:text-3xl ${isActive
+                                                        ? "text-neutral-900"
+                                                        : "text-neutral-400 hover:text-neutral-700"
+                                                    }`}
+                                            >
+                                                {folder.name}
+                                            </button>
+
+                                            {!isAll && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+
+                                                        const confirmed = window.confirm(
+                                                            `Delete folder "${folder.name}"?`
+                                                        );
+                                                        if (!confirmed) return;
+
+                                                        onDeleteFolder(Number(folder.id));
+                                                    }}
+                                                    className="opacity-0 transition group-hover:opacity-100 text-sm text-neutral-400 hover:text-red-500"
+                                                    aria-label={`Delete ${folder.name}`}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>

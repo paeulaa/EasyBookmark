@@ -5,7 +5,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
 import FolderOverlay from "@/components/FolderOverlay";
 import BookmarkCarousel from "@/components/BookmarkCarousel";
-import { getFolders, getBookmarks, createFolder, createBookmark } from "@/lib/api";
+import { getFolders, getBookmarks, createFolder, createBookmark, deleteBookmark, deleteFolder } from "@/lib/api";
 import { Bookmark, Folder } from "@/types";
 import AddBookmarkModel from "@/components/AddBookmarkModel";
 
@@ -142,6 +142,34 @@ export default function DashboardPage() {
         }
     }
 
+    async function handleDeleteBookmark(bookmarkId: number) {
+        try {
+            await deleteBookmark(bookmarkId);
+            setBookmarks((prev) =>
+                prev.filter((bookmark) => bookmark.id !== bookmarkId)
+            );
+        } catch (error) {
+            console.error("Failed to delete bookmark:", error);
+        }
+    }
+
+    async function handleDeleteFolder(folderId: number) {
+        try {
+            await deleteFolder(folderId);
+
+            const deletedFolder = folders.find((folder) => folder.id === folderId);
+
+            setFolders((prev) => prev.filter((folder) => folder.id !== folderId));
+
+            // 如果現在正在看被刪掉的 folder，就退回 All
+            if (deletedFolder && selectedFolder === deletedFolder.name) {
+                setSelectedFolder("All");
+            }
+        } catch (error) {
+            console.error("Failed to delete folder:", error);
+        }
+    }
+
     function handleFetchChrome() {
         console.log("fetch from chrome");
     }
@@ -169,6 +197,7 @@ export default function DashboardPage() {
                     onClose={() => setIsFolderOverlayOpen(false)}
                     onSelectFolder={setSelectedFolder}
                     onCreateFolder={handleCreateFolder}
+                    onDeleteFolder={handleDeleteFolder}
                 />
             </div>
 
@@ -179,7 +208,10 @@ export default function DashboardPage() {
             />
 
             <section className="flex min-h-0 flex-1 flex-col px-6 py-6">
-                <BookmarkCarousel bookmarks={filteredBookmarks} />
+                <BookmarkCarousel
+                    bookmarks={filteredBookmarks}
+                    onDeleteBookmark={handleDeleteBookmark}
+                />
             </section>
 
             <DashboardFooter

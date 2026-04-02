@@ -108,4 +108,39 @@ export async function createBookmark(bookmarkData: {
   return data;
 }
 
+
+export async function deleteBookmark(bookmarkId: number) {
+  const response = await fetch(`${API_BASE_URL}/api/bookmarks/${bookmarkId}/`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("deleteBookmark failed:", response.status, errorText);
+    throw new Error("Failed to delete bookmark");
+  }
+
+  return true;
+}
+
+export async function deleteFolder(folderId: number) {
+  const response = await fetch(`${API_BASE_URL}/api/folders/${folderId}/`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("deleteFolder failed:", response.status, errorText);
+    throw new Error("Failed to delete folder");
+  }
+
+  return true;
+}
+
 export { API_BASE_URL };
