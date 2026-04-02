@@ -1,7 +1,6 @@
 "use client";
 
-const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export default function LandingPage() {
   function handleLogin() {
@@ -21,8 +20,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-neutral-600">
-            Organize your bookmarks into a clean visual collection with folders,
-            cards, and quick access across your workflow.
+            Organize your bookmarks into a clean visual collection with folders, cards, and quick
+            access across your workflow.
           </p>
 
           <div className="mt-8">

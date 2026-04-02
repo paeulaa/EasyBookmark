@@ -5,8 +5,9 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
 import FolderOverlay from "@/components/FolderOverlay";
 import BookmarkCarousel from "@/components/BookmarkCarousel";
-import { getFolders, getBookmarks } from "@/lib/api";
-import { User, Bookmark, Folder } from "@/types";
+import { getFolders, getBookmarks, createFolder, createBookmark } from "@/lib/api";
+import { Bookmark, Folder } from "@/types";
+import AddBookmarkModel from "@/components/AddBookmarkModel";
 
 
 export default function DashboardPage() {
@@ -19,6 +20,7 @@ export default function DashboardPage() {
 
     const [folders, setFolders] = useState<Folder[]>([]);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+    const [addBookmarkModel, setAddBookmarkModel] = useState(false);
 
     useLayoutEffect(() => {
         const el = headerShellRef.current;
@@ -38,10 +40,10 @@ export default function DashboardPage() {
         async function fetchBookmarks() {
             try {
                 const data = await getBookmarks();
-                console.log('API bookmarks:', data); // print出來看看data長怎樣
+                console.log("API bookmarks:", data); // print出來看看data長怎樣
                 setBookmarks(data as Bookmark[]);
             } catch (error) {
-                console.error('Failed to fetch bookmarks:', error);
+                console.error("Failed to fetch bookmarks:", error);
             }
         }
         fetchBookmarks();
@@ -49,24 +51,30 @@ export default function DashboardPage() {
         async function fetchFolders() {
             try {
                 const data = await getFolders();
-                console.log('API folders:', data); // print出來看看data長怎樣
+                console.log("API folders:", data); // print出來看看data長怎樣
                 setFolders(data as Folder[]);
             } catch (error) {
-                console.error('Failed to fetch folders:', error);
+                console.error("Failed to fetch folders:", error);
             }
         }
         fetchFolders();
     }, []);
 
     const filteredBookmarks = useMemo(() => {
-        return bookmarks.filter((bookmark) =>
-            bookmark.title.toLowerCase().includes(searchValue.toLowerCase())
-        );
-    }, [bookmarks, searchValue]);
+        return bookmarks.filter((bookmark) => {
+            const matchesSearch = bookmark.title.
+                toLowerCase().
+                includes(searchValue.toLowerCase());
+            const matchesFolder = selectedFolder === 'All' ||
+                bookmark.folder?.name === selectedFolder;
 
-    const folderNames = useMemo(() => {
-        return ["All", ...folders.map((folder) => folder.name)];
-    }, [folders]);
+            return matchesSearch && matchesFolder;
+        });
+    }, [bookmarks, searchValue, selectedFolder]);
+
+    // const folderNames = useMemo(() => {
+    //     return ["All", ...folders.map((folder) => folder.name)];
+    // }, [folders]);
 
     function handleOpenProfile() {
         console.log("open profile");
@@ -74,10 +82,64 @@ export default function DashboardPage() {
 
     function handleAddBookmark() {
         console.log("open add bookmark");
+        if (selectedFolder === "All") {
+            alert("Please select a folder first");
+            return;
+        }
+        setAddBookmarkModel(true);
     }
 
-    function handleCreateFolder() {
-        console.log("create folder");
+    async function handleCreateBookmark(data: {
+        title: string,
+        url: string,
+        note?: string,
+    }) {
+        const matchedFolder = folders.find(
+            (folder) => folder.name === selectedFolder
+        );
+
+        if (!matchedFolder) {
+            alert("No valid folder selected");
+            return;
+        }
+
+        try {
+            const newBookmark = await createBookmark({
+                ...data,
+                folder: matchedFolder.id,
+            });
+            const normalizedBookmark = {
+                ...newBookmark,
+                folder: matchedFolder, // ✅ 用完整 folder object 補回去
+            };
+            setBookmarks((prev) => [...prev, normalizedBookmark]);
+            setAddBookmarkModel(false); // ✅ 成功後關 modal
+        } catch (error) {
+            console.error("Failed to create bookmark:", error);
+        }
+    }
+
+    async function handleCreateFolder(name: string) {
+        console.log("Creating folder:", name);
+
+        const exists = folders.some(
+            (folder) => folder.name.trim().toLowerCase() === name.trim().toLowerCase(),
+        );
+
+        if (exists) {
+            alert("Folder name already exists");
+            return;
+        }
+
+        try {
+            const newFolder = await createFolder(name);
+            console.log("Created folder:", newFolder);
+
+            // 更新 UI（關鍵）
+            setFolders((prev) => [...prev, newFolder]);
+        } catch (error) {
+            console.error("Failed to create folder:", error);
+        }
     }
 
     function handleFetchChrome() {
@@ -91,15 +153,10 @@ export default function DashboardPage() {
     return (
         <main className="flex min-h-dvh w-full flex-1 flex-col bg-neutral-50 text-neutral-900">
             {/* Header + folder sheet share one positioning context so the overlay sits under the navbar */}
-            <div
-                ref={headerShellRef}
-                className="relative z-50 shrink-0 bg-white"
-            >
+            <div ref={headerShellRef} className="relative z-50 shrink-0 bg-white">
                 <DashboardHeader
                     currentFolder={selectedFolder}
-                    onToggleFolders={() =>
-                        setIsFolderOverlayOpen((open) => !open)
-                    }
+                    onToggleFolders={() => setIsFolderOverlayOpen((open) => !open)}
                     onOpenProfile={handleOpenProfile}
                     onAddBookmark={handleAddBookmark}
                 />
@@ -107,13 +164,19 @@ export default function DashboardPage() {
                 <FolderOverlay
                     isOpen={isFolderOverlayOpen}
                     topPx={folderOverlayTopPx}
-                    folders={folderNames}
+                    folders={folders}
                     selectedFolder={selectedFolder}
                     onClose={() => setIsFolderOverlayOpen(false)}
                     onSelectFolder={setSelectedFolder}
                     onCreateFolder={handleCreateFolder}
                 />
             </div>
+
+            <AddBookmarkModel
+                isOpen={addBookmarkModel}
+                onClose={() => setAddBookmarkModel(false)}
+                onSubmit={handleCreateBookmark}
+            />
 
             <section className="flex min-h-0 flex-1 flex-col px-6 py-6">
                 <BookmarkCarousel bookmarks={filteredBookmarks} />
