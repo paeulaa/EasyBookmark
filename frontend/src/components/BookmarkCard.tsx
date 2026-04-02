@@ -1,10 +1,12 @@
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 type BookmarkCardProps = {
   id: number;
   title: string;
   url: string;
   onDeleteBookmark: (id: number) => void;
+  cardWidth: number;
 };
 
 /**
@@ -30,9 +32,12 @@ export default function BookmarkCard({
   url,
   id,
   onDeleteBookmark,
+  cardWidth,
 }: BookmarkCardProps) {
   return (
-    <article className="h-auto w-[400px] min-w-[300px] shrink-0 overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm flex flex-col">
+    <motion.article
+      animate={{ width: cardWidth }}
+      className="h-[520px] w-[400px] min-w-[300px] shrink-0 overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm flex flex-col">
 
       {/* 上半區：固定比例預覽圖（用 next/image 取代 img 以符合 ESLint / 優化載入） */}
       <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-neutral-200">
@@ -53,6 +58,6 @@ export default function BookmarkCard({
         <button onClick={() => onDeleteBookmark(id)}>Delete</button>
       </div>
 
-    </article>
+    </motion.article>
   );
 }
