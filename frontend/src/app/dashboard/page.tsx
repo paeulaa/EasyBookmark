@@ -8,7 +8,7 @@ import BookmarkCarousel from "@/components/BookmarkCarousel";
 import { getFolders, getBookmarks, createFolder, createBookmark, deleteBookmark, deleteFolder } from "@/lib/api";
 import { Bookmark, Folder } from "@/types";
 import AddBookmarkModel from "@/components/AddBookmarkModel";
-
+import SearchOverlay from "@/components/SearchOverlay";
 
 export default function DashboardPage() {
     const headerShellRef = useRef<HTMLDivElement>(null);
@@ -17,6 +17,7 @@ export default function DashboardPage() {
     const [selectedFolder, setSelectedFolder] = useState("All");
     const [searchValue, setSearchValue] = useState("");
     const [isFolderOverlayOpen, setIsFolderOverlayOpen] = useState(false);
+    const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
 
     const [folders, setFolders] = useState<Folder[]>([]);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -178,6 +179,11 @@ export default function DashboardPage() {
         console.log("open gallery");
     }
 
+    function handleOpenSearch() {
+        console.log("open search");
+        setIsSearchOverlayOpen(true);
+    }
+
     return (
         <main className="flex min-h-dvh w-full flex-1 flex-col bg-neutral-50 text-neutral-900">
             {/* Header + folder sheet share one positioning context so the overlay sits under the navbar */}
@@ -215,10 +221,18 @@ export default function DashboardPage() {
             </section>
 
             <DashboardFooter
-                searchValue={searchValue}
-                onSearchChange={setSearchValue}
                 onFetchChrome={handleFetchChrome}
                 onOpenGallery={handleOpenGallery}
+                onOpenSearch={handleOpenSearch}
+            />
+
+            <SearchOverlay
+                isOpen={isSearchOverlayOpen}
+                topPx={folderOverlayTopPx}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                results={filteredBookmarks}
+                onClose={() => setIsSearchOverlayOpen(false)}
             />
         </main>
     );
